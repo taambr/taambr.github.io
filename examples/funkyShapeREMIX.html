@@ -100,7 +100,7 @@
 		//creating an empty array
 		var funkySquare = [];
 		//and populating it with 3 FunkyShapes
-		for (var i = 0; i < 70; i++) {
+		for (var i = 0; i < 0; i++) {
 		    funkySquare[i] = new FunkyShape();
 		}
 
@@ -115,7 +115,7 @@
 		    funkyCircle.init(0.01, 0.02, 0.0, 0.0, 400);
 		    //initializing our squares with random values
 		    //to ensure they don't follow the same path
-		    for (var i = 0; i < 3; i++) {
+		    for (var i = 0; i < ; i++) {
 		        var xInc = Math.random() / 10;
 		        var yInc = Math.random() / 10;
 		        funkySquare[i].init(xInc, yInc, 0, 0, 800);
@@ -148,7 +148,7 @@
 		    //circlePos returns x and y positions as an object
 		    ellipse(circlePos.xPos, circlePos.yPos, circlePos.radius, circlePos.radius);
 		    stroke('red');
-		    for (var i = 0; i < 3; i++) {
+		    for (var i = 0; i < 0; i++) {
 		        var squarePos = funkySquare[i].update(bleepEnvelope.value);
 		        rect(squarePos.xPos, squarePos.yPos, squarePos.radius, squarePos.radius);
 		    }
