@@ -113,7 +113,7 @@
 		    funkyCircle.init(0.01, 0.02, 0.0, 0.0, 400);
 		    //initializing our squares with random values
 		    //to ensure they don't follow the same path
-		    for (var i = 0; i < 3; i++) {
+		    for (var i = 0; i < 0; i++) {
 		        var xInc = Math.random() / 10;
 		        var yInc = Math.random() / 10;
 		        funkySquare[i].init(xInc, yInc, 0, 0, 800);
@@ -145,8 +145,10 @@
 		    var circlePos = funkyCircle.update(bassEnvelope.value);
 		    //circlePos returns x and y positions as an object
 		    ellipse(circlePos.xPos, circlePos.yPos, circlePos.radius, circlePos.radius);
+		    
+		    //square
 		    stroke('red');
-		    for (var i = 0; i < 1; i++) {
+		    for (var i = 0; i < 0; i++) {
 		        var squarePos = funkySquare[i].update(bleepEnvelope.value);
 		        rect(squarePos.xPos, squarePos.yPos, squarePos.radius, squarePos.radius);
 		    }
