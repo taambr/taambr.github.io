@@ -31,6 +31,8 @@
   
 
 
+
+
 <!-- 	<link rel="stylesheet" type="text/css" href="./style/examples.css">
  -->
 	<script type="text/javascript">
@@ -39,196 +41,251 @@
 
 </head>
 <body>
-	<div id="Content">
-		<div id="Title">Events</div>
+	<style type="text/css">
+		canvas {
+			position: absolute;
+			top: 0px;
+			z-index: -1;
+		}
+	</style>
+	<div id="Content" class="FullScreen">
+		<div id="Title">Using p5</div>
 		<div id="Explanation">
-			Tone's Event classes (<a href="http://tonejs.org/docs/#Event">Tone.Event</a>,
-				<a href="http://tonejs.org/docs/#Loop">Tone.Loop</a>,
-				<a href="http://tonejs.org/docs/#Part">Tone.Part</a> and
-				<a href="http://tonejs.org/docs/#Sequence">Tone.Sequence</a>)
-			simplify scheduling events along the Transport. Each class abstracts away calls to
-				<a href="http://tonejs.org/docs/#Transport.schedule">Transport.schedule</a> or
-				<a href="http://tonejs.org/docs/#Transport.scheduleRepeat">scheduleRepeat</a>
-			and lets you create precise, rhythmic events which are startable, stoppable and loopable.
+			By accessing the envelope's current value, we can create responsive visuals that are directly tied to what is heard.
+				<br><br>
+			This sketch uses <a href="p5js.org" target="_blank">p5.js</a> for visual components and the 
+				<a href="http://cdn.tonejs.org/latest/p5.Tone.js">p5 version of Tone.js</a> 
+			which adds a p5 <code>preload</code> hook for buffer loading. 
 		</div>
 	</div>
+	<script id="p5" type="text/javascript">
+
+		//creating our class name
+		function FunkyShape() {}
+
+		/*
+		FunkyShape init gives initial and offset values for 
+		the perlin noise functions in update.
+		Giving different initial values ensures that 
+		each funky shape follows its own funky path
+		*/
+		FunkyShape.prototype.init = function(xInc, yInc, xOff, yOff, radius) {
+		    this.xInc = xInc;
+		    this.yInc = yInc;
+		    this.xOff = xOff;
+		    this.yOff = yOff;
+		    this.radius = radius;
+		    this.xPos = 0;
+		    this.yPos = 0;
+		}
+
+		//updates the x, y, and radius values of the shape
+		FunkyShape.prototype.update = function(envelope) {
+		    this.xPos = noise(this.xOff) * width;
+		    this.yPos = noise(this.yOff) * height;
+		    this.xOff += this.xInc;
+		    this.yOff += this.yInc;
+		    this.sRadius = this.radius * envelope;
+		    return {
+		        "xPos": this.xPos,
+		        "yPos": this.yPos,
+		        "radius": this.sRadius
+		    };
+		}
 	
-<li class="file"><a href="audio/BOLS/Ta.wav" >Ta.wav</a></li>
-<li class="file"><a href="audio/BOLS/Re.wav" >Re.wav</a></li>
-<li class="file"><a href="audio/BOLS/Tu.wav" >Tu.wav</a></li>
-<li class="file"><a href="audio/BOLS/Ti.wav" >Ti.wav</a></li>
-<li class="file"><a href="audio/BOLS/Ki.wav" >Ki.wav</a></li>
-<li class="file"><a href="audio/BOLS/Tin.wav" >Tin.wav</a></li>
-<li class="file"><a href="audio/BOLS/Na.wav" >Na.wav</a></li>
-<li class="file"><a href="audio/BOLS/Te.wav" >Te.wav</a></li>	<script id="ToneCode" type="text/javascript">
-		/*
-		 KICK
-		 */
-		var kick = new Tone.DrumSynth({
-			"envelope" : {
-				"sustain" : 0,
-				"attack" : 0.02,
-				"decay" : 0.7
-			},
-			"octaves" : 7
-		}).toMaster()
+		//using our FunkyShape class
+		//to create a funkyCircle class
+		var funkyCircle = new FunkyShape();
 
-		/* var kickPart = new Tone.Loop(function(time){
-			kick.triggerAttackRelease("C2", "8n", time);
-		}, "2n").start(0);
-		 */
+		//creating an empty array
+		var funkySquare = [];
+		//and populating it with 3 FunkyShapes
+		for (var i = 0; i < 3; i++) {
+		    funkySquare[i] = new FunkyShape();
+		}
 
-		/*
-		 SNARE
-		 */
-		var snare = new Tone.NoiseSynth({
-			"volume" : -5,
-			"envelope" : {
-				"attack" : 0.001,
-				"decay" : 0.2,
-				"sustain" : 0
-			},
-			"filterEnvelope" : {
-				"attack" : 0.001,
-				"decay" : 0.1,
-				"sustain" : 0
-			}
-		}).toMaster();
-/*
-		var snarePart = new Tone.Loop(function(time){
-			snare.triggerAttack(time);
-		}, "2n").start("4n"); */
+		function setup() {
+		    //create a canvas width and height of the screen
+		    createCanvas(windowWidth, windowHeight);
+		    //no fill
+		    fill(255);
+		    strokeWeight(1);
+		    rectMode(CENTER);
+		    //initializing our funky circle
+		    funkyCircle.init(0.01, 0.02, 0.0, 0.0, 400);
+		    //initializing our squares with random values
+		    //to ensure they don't follow the same path
+		    for (var i = 0; i < 3; i++) {
+		        var xInc = Math.random() / 10;
+		        var yInc = Math.random() / 10;
+		        funkySquare[i].init(xInc, yInc, 0, 0, 800);
+		    }
+		}
 
+		var phase = 0;
 
-		/**
-		 *  PIANO
-		 */
-
-		var piano = new Tone.PolySynth(4, Tone.SimpleSynth, {
-			"volume" : 1,
-			"oscillator" : {
-				"partials" : [1],
-			},
-			"portamento" : 0.05
-		}).toMaster()
-
-		var cChord = ["C2"];
-		var dChord = ["D2"];
-		var gChord = ["G2"];
-/*
-		var pianoPart = new Tone.Part(function(time, chord){
-			piano.triggerAttackRelease(chord, "8n", time);
-		}, [["0:1", cChord], ["0:1:3", dChord], ["0:2:2", gChord]]).start("1m");
-
-		pianoPart.loop = true;
-		pianoPart.loopEnd = "1m";
-		pianoPart.humanize = false; */
-
-		/**
-		 *  CYNTHY
-		 */
-		var cynthy = new Tone.PolySynth(4, Tone.SimpleSynth, {
-			"volume": 1,
-			"oscillator" : {
-				"partials" : [0,0,1],
-			}
-			//"portamento" : 0.05
-		}).toMaster()
-/*
-		var cynthyPart = new Tone.Part(function(time, chord){
-			cynthy.triggerAttackRelease(chord, "8n", time);
-		}, [["0:3:1", cChord], ["0:3:2", dChord]]).start("1m");
-
-		cynthyPart.loop = true;
-		cynthyPart.loopEnd = "1m";
-		cynthyPart.humanize = false; */
-
-		/*
-		 BASS
-		 */
-		var bass = new Tone.MonoSynth({
-			"volume" : -30,
-			"envelope" : {
-				"attack" : 0.1,
-				"decay" : 0.3,
-				"release" : 2,
-			},
-			"filterEnvelope" : {
-				"attack" : 0.001,
-				"decay" : 0.01,
-				"sustain" : 0.5,
-				"baseFrequency" : 200,
-				"octaves" : 2.6
-			}
-		}).toMaster();
-
-		var bassPart = new Tone.Sequence(function(time, note){
-			bass.triggerAttackRelease(note, "16n", time);
-		}, ["C2", ["C3", ["C3", "D2"]], "E2", ["D2", "A1"]]);
-
-//  		bassPart.start(0);
-
-//		bassPart.probability = 0.9;
-
-
-		var sampler = new Tone.Sampler({
-		  "Ta": {
-		    1: "audio/BOLS/Ta.wav"
-		  },
-		  "Tin": {
-		    1: "audio/BOLS/Tin.wav"
-		  },
-		  "Tu": {
-		    1: "audio/BOLS/Tu.wav"
-		  },
-		  "Na": {
-		    1: "audio/BOLS/Na.wav"
-		  },
-		  "Ki": {
-		  	1: "audio/BOLS/Ki.wav"
-		  },
-		  "Re": {
-		  	1: "audio/BOLS/Re.wav"
-		  },
-		  "Ti": {
-		  	1: "audio/BOLS/Ti.wav"
-		  },
-		  "Te": {
-		  	1: "audio/BOLS/Te.wav"
-		  }
-		}).toMaster();
-
-		var seq = new Tone.Sequence(function(time, note) {
-//console.log(time);
-		  console.log(note);
-		  sampler.triggerAttackRelease(note, "8n", time, .5);
-		  //subdivisions are given as subarrays
-		}, [
-			["Na.1"],
-			["Tin.1", "Na.1"],
-			["Tin.1"],
-			["Ti.1", "Re.1", "Ki.1", "Ti.1"],
-			["Ta.1", "Ki.1"],
-			["Ta.1", "Ki.1"],
-			["Ta.1", "Ki.1"],
-			["Ti.1", "Ta.1"],
-			["Ki.1", "Ti.1"],
-			["Ta.1", "Ki.1"],
-			[["Ti.1", "Re.1"], null, "Ki.1"],
-			[null, "Ta.1", null],
-		], "4n").start(0);
-
-		//set the transport
-		Tone.Transport.bpm.value = 120;
-
-
+		function draw() {
+		    background(255);
+		    stroke(0);
+		    //drawing the kick wave at the bottom
+		    //it is composed of a simple sine wave that
+		    //changes in height with the kick envelope
+		    for (var i = 0; i < width; i++) {
+		        //scaling kickEnvelope value by 200 
+		        //since default is 0-1
+		        var kickValue = kickEnvelope.value * 200;
+		        //multiplying this value to scale the sine wave 
+		        //depending on x position
+		        var yDot = Math.sin((i / 60) + phase) * kickValue;
+		        point(i, height -150 + yDot);
+		    }
+		    //increasing phase means that the kick wave will 
+		    //not be standing and looks more dynamic
+		    phase += 1;
+		    //updating circle and square positions with 
+		    //bass and bleep envelope values
+		    var circlePos = funkyCircle.update(bassEnvelope.value);
+		    //circlePos returns x and y positions as an object
+		    ellipse(circlePos.xPos, circlePos.yPos, circlePos.radius, circlePos.radius);
+		    stroke('red');
+		    for (var i = 0; i < 3; i++) {
+		        var squarePos = funkySquare[i].update(bleepEnvelope.value);
+		        rect(squarePos.xPos, squarePos.yPos, squarePos.radius, squarePos.radius);
+		    }
+		}
 	</script>
-	<script type="text/javascript">
 
+	<script id="Song" type="text/javascript">
+
+		//HATS
+
+		//filtering the hi-hats a bit
+		//to make them sound nicer
+		var lowPass = new Tone.Filter({
+		    "frequency": 14000,
+		}).toMaster();
+
+		//we can make our own hi hats with 
+		//the noise synth and a sharp filter envelope
+		var openHiHat = new Tone.NoiseSynth({
+			"volume" : -10,
+		    "filter": {
+		        "Q": 1
+		    },
+		    "envelope": {
+		        "attack": 0.01,
+		        "decay": 0.3
+		    },
+		    "filterEnvelope": {
+		        "attack": 0.01,
+		        "decay": 0.03,
+		        "baseFrequency": 4000,
+		        "octaves": -2.5,
+		        "exponent": 4,
+		    }
+		}).connect(lowPass);
+
+		var openHiHatPart = new Tone.Part(function(time){
+			openHiHat.triggerAttack(time);
+		}, ["2*8n", "6*8n"]).start(0);
+
+		var closedHiHat = new Tone.NoiseSynth({
+			"volume" : -10,
+		    "filter": {
+		        "Q": 1
+		    },
+		    "envelope": {
+		        "attack": 0.01,
+		        "decay": 0.15
+		    },
+		    "filterEnvelope": {
+		        "attack": 0.01,
+		        "decay": 0.03,
+		        "baseFrequency": 4000,
+		        "octaves": -2.5,
+		        "exponent": 4,
+
+		    }
+		}).connect(lowPass);
+
+		var closedHatPart = new Tone.Part(function(time){
+			closedHiHat.triggerAttack(time);
+		}, ["0*8n", "1*16n", "1*8n", "3*8n", "4*8n", "5*8n", "7*8n", "8*8n"]).start(0);
+
+		//BASS
+		var bassEnvelope = new Tone.AmplitudeEnvelope({
+		    "attack": 0.01,
+		    "decay": 0.2,
+		    "sustain": 0,
+		    "release": 0,
+		}).toMaster();
+
+		var bassFilter = new Tone.Filter({
+		    "frequency": 600,
+		    "Q": 8
+		});
+
+		var bass = new Tone.PulseOscillator("A2", 0.4).chain(bassFilter, bassEnvelope);
+		bass.start();
+
+		var bassPart = new Tone.Part(function(time, note){
+			bass.frequency.setValueAtTime(note, time);
+		    bassEnvelope.triggerAttack(time);
+		}, [["0:0", "A1"],
+			["0:2", "G1"],
+			["0:2:2", "C2"],
+			["0:3:2", "A1"]]).start(0);
+
+		//BLEEP
+		var bleepEnvelope = new Tone.AmplitudeEnvelope({
+		    "attack": 0.01,
+		    "decay": 0.4,
+		    "sustain": 0,
+		    "release": 0,
+		}).toMaster();
+
+
+		var bleep = new Tone.Oscillator("A4").connect(bleepEnvelope);
+		bleep.start();
+
+		var bleepLoop = new Tone.Loop(function(time){
+			 bleepEnvelope.triggerAttack(time);
+		}, "2n").start(0);
+
+		//KICK
+		var kickEnvelope = new Tone.AmplitudeEnvelope({
+		    "attack": 0.01,
+		    "decay": 0.2,
+		    "sustain": 0,
+		    "release": 0
+		}).toMaster();
+
+		var kick = new Tone.Oscillator("A2").connect(kickEnvelope).start();
+
+		kickSnapEnv = new Tone.FrequencyEnvelope({
+		    "attack": 0.005,
+		    "decay": 0.01,
+		    "sustain": 0,
+		    "release": 0,
+		    "baseFrequency": "A2",
+		    "octaves": 2.7
+		}).connect(kick.frequency);
+
+		var kickPart = new Tone.Part(function(time){
+			kickEnvelope.triggerAttack(time);
+			kickSnapEnv.triggerAttack(time);
+		}, ["0", "0:0:3", "0:2:0", "0:3:1"]).start(0);
+
+		//TRANSPORT
+		Tone.Transport.loopStart = 0;
+		Tone.Transport.loopEnd = "1:0";
+		Tone.Transport.loop = true;
+	</script>
+	
+	<script id="GUI" type="text/javascript">
 		$(function(){
 
 			new Interface.Button({
-				key : 32,
 				type : "toggle",
 				text : "Start",
 				activeText : "Stop",
@@ -239,6 +296,7 @@
 					Tone.Transport.stop();
 				}
 			});
+
 		});
 	</script>
 </body>
